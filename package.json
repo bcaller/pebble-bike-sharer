@@ -1,0 +1,89 @@
+{
+    "author": "bcaller@gmail.com",
+    "dependencies": {},
+    "keywords": [],
+    "name": "bike-sharer",
+    "pebble": {
+        "capabilities": [
+            "location"
+        ],
+        "displayName": "bike-sharer",
+        "enableMultiJS": true,
+        "messageKeys": {
+            "address_0": 104,
+            "address_1": 204,
+            "address_2": 304,
+            "address_3": 404,
+            "address_4": 504,
+            "bikes": 7,
+            "distance_0": 103,
+            "distance_1": 203,
+            "distance_2": 303,
+            "distance_3": 403,
+            "distance_4": 503,
+            "err": 999,
+            "heading_0": 102,
+            "heading_1": 202,
+            "heading_2": 302,
+            "heading_3": 402,
+            "heading_4": 502,
+            "name_0": 101,
+            "name_1": 201,
+            "name_2": 301,
+            "name_3": 401,
+            "name_4": 501,
+            "slots": 6
+        },
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "images/nobikes.png",
+                    "name": "NO_BIKES",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/nointernet.png",
+                    "name": "NO_INTERNET",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/disconnected.png",
+                    "name": "DISCO",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/warning.png",
+                    "name": "WARNING",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/ic_local_parking_white_48dp.png",
+                    "name": "PARK",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/ic_directions_bike_black_48dp.png",
+                    "name": "BIKE",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "basalt",
+            "chalk"
+        ],
+        "uuid": "11501158-e49e-486b-aab8-d6397688fa9f",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.9.0"
+}

@@ -1,0 +1,315 @@
+var haversine = require('haversine');
+var BASE = "http://api.citybik.es";
+var NETWORKS_URL = "/v2/networks?fields=name,href,location";
+var CHOSEN_KEY = "chosenxx";
+var STATION_DATA_KEY = "stdata";
+var networks;
+var chosenNetwork = false;
+var stations = null;
+var stationsLastUpdate;
+var STATIONS_UPDATE_INTERVAL = 20 * 1000; // 30 seconds
+var stations_sorted = false;
+var onStationsUpdated;
+var DIST_MAX = 40 * 1000; // 40km
+var had_prechosen_network = false;
+var stations_dict;
+var updater_interval;
+var has_errored = false;
+var mapAsync = require('async').mapAsync;
+
+var httpCache = {};
+var request = function (url, timeout, callback) {
+	console.log("GET " + url);
+	if(url in httpCache) {
+		console.log("Returning from cache");
+		callback(httpCache[url]);
+		delete httpCache[url];
+		return;
+	}
+	var xhr = new XMLHttpRequest();
+	if(timeout) xhr.timeout = timeout;
+	xhr.onload = function () {
+		callback(JSON.parse(this.responseText));
+	};
+	xhr.onerror = xhr.ontimeout = reportNoInternet;
+	xhr.open('GET', url);
+	xhr.send();
+};
+
+function updateNetworks(cb) {
+	if(!localStorage.getItem(CHOSEN_KEY)) {
+		// On first run
+		// Or on not finding a nearby network
+		localStorage.clear();
+		had_prechosen_network = false;
+		request(BASE + NETWORKS_URL, 40000, function(data) {
+			networks = [];
+			for(var i=0; i< data.networks.length; i++) {
+				var network = data.networks[i];
+				networks.push({
+					url: network.href,
+					latitude: network.location.latitude,
+					longitude: network.location.longitude,
+					name: network.name
+				});
+			}
+			console.log(networks.length + " networks downloaded");
+			cb();
+		});
+	} else {
+		// We have pre-chosen a network
+		had_prechosen_network = true;
+		try {
+			networks = [JSON.parse(localStorage.getItem(CHOSEN_KEY))];
+			if(networks[0] && networks[0].url)
+				cb();
+			else {
+				networks = null;
+				throw new Error("Bad cache");
+			}
+		} catch(err) {
+			console.log("Error with localStorage reading network", err);
+			localStorage.clear();
+			updateNetworks(cb);
+		}
+	}
+}
+
+var busyWaitingForRequests = false;
+function setNetwork(coords) {
+	stations_sorted = false;
+	if(!chosenNetwork && !busyWaitingForRequests && networks) {
+		//Find nearest network
+		var bestNetwork = networks[0];
+		var bestDist = haversine.dist(coords, networks[0]);
+		var nearbyNetworks = [];
+		for(var i=1; i< networks.length; i++) {
+			var d = haversine.dist(coords, networks[i]);
+			//console.log(JSON.stringify(networks[i]) + " " + d);
+			if(d < bestDist) {
+				bestNetwork = networks[i];
+				bestDist = d;
+			}
+			
+			if(d < DIST_MAX) {
+				nearbyNetworks.push(networks[i]);
+			}
+		}
+
+		if(bestDist > DIST_MAX) {
+			console.log("No nearby network");
+			localStorage.clear();
+			if(had_prechosen_network) {
+				console.log("Downloading full list of networks");
+				updateNetworks(function(){setNetwork(coords);});
+			} else {
+				reportNoBikeNetworks();
+			}
+			return false;
+		} else if(networks.length > 1) {
+			if(haversine.dist(coords, networks[0]) < DIST_MAX) {
+				nearbyNetworks.push(networks[i]);
+			}
+			if(nearbyNetworks.length > 1) {
+				console.log("NEARBY: " + JSON.stringify(nearbyNetworks));
+				return decideMultipleNearby(nearbyNetworks, coords);
+			}
+		}
+
+		//Commit to network
+		chosenNetwork = bestNetwork;
+		var asStr = JSON.stringify(chosenNetwork);
+		localStorage.setItem(CHOSEN_KEY, asStr);
+		console.log("Chosen: " + asStr);
+
+		//Start updater
+		clearInterval(updater_interval);
+		updater_interval = setInterval(updateStations, STATIONS_UPDATE_INTERVAL);
+		updateStations();
+	}
+	return chosenNetwork;
+}
+
+
+function decideMultipleNearby(nbNetworks, coords) {
+	busyWaitingForRequests = true;
+	mapAsync(nbNetworks,
+			 function(n, cb) {
+				 request(BASE + n.url, STATIONS_UPDATE_INTERVAL, function(data) {
+					 httpCache[BASE + n.url] = data;
+					 var nearest = DIST_MAX;
+					 for(var s=0; s< data.network.stations.length; s++) {
+						 if(isActiveStation(data.network.stations[s])) {
+							 var d = haversine.dist(coords, data.network.stations[s]);
+							 if(d < nearest) nearest = d;
+						 }
+					 }
+					 cb(nearest);
+				 });
+			 },
+			 function(nets) {
+				 var bestNetwork = null;
+				 var bestDist = DIST_MAX;
+				 for(var n=0; n< nets.length; n++) {
+					 var nearest = nets[n];
+					 if(nearest < bestDist) {
+						 bestNetwork = n;
+						 bestDist = nearest;
+					 }
+				 }
+				 
+				 busyWaitingForRequests = false;
+				 if(bestNetwork!==null) {
+					 networks = [nbNetworks[bestNetwork]];
+					 console.log("Networks now set to " + JSON.stringify(networks));
+					 setNetwork(coords);
+				 } else {
+					 console.error("WTF no best network");
+					 //FIXME: TODO: Choice dialog
+				 }
+			 });
+}
+
+
+function isActiveStation(station) {
+	if(!station.empty_slots && !station.free_bikes) return false;
+	if(station.empty_slots <= 0 && station.free_bikes <= 0) return false;
+	if(!station.extra) return true;
+	if("installed" in station.extra && !station.extra.installed) return false;
+	if("status" in station.extra && station.extra.status == 'CLOSED') return false;
+	if("locked" in station.extra && station.extra.locked) return false;
+	if("testStation" in station.extra && station.extra.testStation) return false;
+	if("statusValue" in station.extra && station.extra.statusValue == 'Not In Service') return false;
+
+	return true;
+}
+
+function niceAddress(addr) {
+	if(!addr) return;
+	return addr.replace(/\bROAD\b/i, "Rd").replace(/\bBOULEVARD\b/i, "Bd").replace(/\bSTREET\b/i, "St");
+}
+
+function clampByte(x) {
+	return Math.max(0, Math.min(254, x));
+}
+
+function newStation(station) {
+	var s = {
+		id: station.id,
+		latitude: station.latitude,
+		longitude: station.longitude,
+		name: station.extra.name || station.name.replace(/^\d{3,} - /, ""),
+		bikes: clampByte(station.free_bikes),
+		slots: clampByte(station.empty_slots),
+		address: niceAddress(station.extra.address || station.extra.location || station.extra.stAddress2 || station.extra.description || chosenNetwork.name)
+	};
+	if(s.address == s.name)
+		delete s.address;
+	return s;
+}
+
+function updateStations(network) {
+	console.log("Making request for stations");
+
+	request(BASE + (network || chosenNetwork).url, STATIONS_UPDATE_INTERVAL - 3000, function(data) {
+		stations_sorted = false;
+		var s = data.network.stations;
+		stations = [];
+		stations_dict = {};
+		stationsLastUpdate = new Date();
+		for(var i=0; i< s.length; i++) {
+			if(isActiveStation(s[i])) {
+				var station = newStation(s[i]);
+				stations.push(station);
+				stations_dict[station.id] = station;
+			}
+		}
+
+		console.log("We have " + stations.length + " active stations.");
+		if(onStationsUpdated) onStationsUpdated(stations);
+
+		localStorage.setItem(STATION_DATA_KEY, JSON.stringify({
+			lut: (Date.now() + 0),
+			stations: stations
+		}));
+	});
+
+	if(!stations && had_prechosen_network) {
+		console.log("Let's check the cache in the meantime");
+		var cachedStr = localStorage.getItem(STATION_DATA_KEY);
+		if(cachedStr) {
+			try {
+				var cached = JSON.parse(cachedStr);
+				if(cached.lut && cached.stations && cached.lut > (Date.now() - 5 * 60 * 1000)) {
+					stations = cached.stations;
+					stations_dict = {};
+					for(var i=0; i< stations.length; i++) {
+						stations_dict[stations[i].id] = stations[i];
+					}
+					console.log("We have cached " + stations.length + " active stations.");
+					if(onStationsUpdated) onStationsUpdated(stations);
+				}
+			} catch(err) {}
+		}
+	}
+}
+
+function nearestStations(coords) {
+	if(stations) {
+		if(!(stations_sorted && stations_sorted[0] == coords.latitude && stations_sorted[1] == coords.longitude)) {
+			stations.sort(function(a, b) {
+				return haversine.dist(coords, a) - haversine.dist(coords, b);
+			});
+			stations_sorted = [coords.latitude, coords.longitude];
+		}
+
+		if(had_prechosen_network && haversine.dist(coords, stations[0]) > 3333) {
+			console.error("We appear to have moved to a nearby network");
+			had_prechosen_network = false;
+			localStorage.clear();
+		}
+		//console.log(JSON.stringify(stations[0]));
+		//console.log(JSON.stringify(stations[1]));
+	}
+	return stations;
+}
+
+// If already sorted, performance is ok
+function stationById(id) {
+	for(var i=0; i< stations.length; i++) {
+		if(stations[i].id == id) return stations[i]; 
+	}
+}
+
+function setOnStationsUpdated(cb) {
+	onStationsUpdated = cb;
+}
+
+function reportNoBikeNetworks() {
+	Pebble.sendAppMessage({err: 4}, function() {
+		console.log("Send err_no_bike_networks to watch");
+	}, function(err) {
+		console.log("error sending to watch", err);
+	});
+}
+
+function reportNoInternet() {
+	has_errored = true;
+	Pebble.sendAppMessage({err: 3}, function() {
+		console.log("Send err_no_internet to watch");
+	}, function(err) {
+		console.log("error sending to watch", err);
+	});
+}
+
+module.exports.init = updateNetworks;
+module.exports.setNetwork = setNetwork;
+module.exports.updateStations = updateStations;
+module.exports.nearestStations = nearestStations;
+module.exports.setOnStationsUpdated = setOnStationsUpdated;
+module.exports.stationById = stationById;
+module.exports.getAndClearErrorFlag = function() {
+	var old_err = has_errored;
+	has_errored = false;
+	return old_err;
+};
