@@ -10,7 +10,7 @@ function beginWatch(onUpdate, onErr) {
 		if(pos && pos.coords) {
 			var coords = LL(pos.coords);
 			/* FIXME HACK*/
-			coords = LL({latitude: 48.863388, longitude: 2.386694});
+			//coords = LL({latitude: 48.863388, longitude: 2.386694});
 			//pos.coords = {latitude: 48.8584, longitude: 2.2945};
 			//coords = {latitude: 40.7527, longitude: -73.9772};
 			//coords = {latitude: 40.7425993836325, longitude: -74.0322035551};
