@@ -2,8 +2,7 @@
 #include "station.h"
 #include "list.h"
 #include "compass.h"
-
-#define DANGER_NUM 4
+#include "consts.h"
 
 static int station_pointer;
 static char distance_str[8];
@@ -98,16 +97,17 @@ static void refresh(bool new_stations) {
 	
 	text_layer_set_text(address, station->address);
 	
-	int h = station->heading + 22;
-	if(h < 45) snprintf(heading_str, 3, " N");
-	else if(h <= 90) snprintf(heading_str, 3, "NE");
-	else if(h <= 135) snprintf(heading_str, 3, " E");
-	else if(h <= 180) snprintf(heading_str, 3, "SE");
-	else if(h <= 180+45) snprintf(heading_str, 3, " S");
-	else if(h <= 270) snprintf(heading_str, 3, "SW");
-	else if(h <= 270+45) snprintf(heading_str, 3, " W");
-	else if(h <= 360) snprintf(heading_str, 3, "NW");
-	else snprintf(heading_str, 3, " N");
+	int h = (station->heading + TRIG_MAX_ANGLE/16) / (TRIG_MAX_ANGLE/8);
+	#define COMPASS_DIR(H,STR) if(h<H)snprintf(heading_str, 3, STR)
+	COMPASS_DIR(1," N");
+	else COMPASS_DIR(2,"NE");
+	else COMPASS_DIR(3," E");
+	else COMPASS_DIR(4,"SE");
+	else COMPASS_DIR(5," S");
+	else COMPASS_DIR(6,"SW");
+	else COMPASS_DIR(7," W");
+	else COMPASS_DIR(8,"NW");
+	else COMPASS_DIR(128," N"); // North is +/- 22.5 degrees (360/16)
 	text_layer_set_text(heading, heading_str);
 		
 	GColor new_bg_color;

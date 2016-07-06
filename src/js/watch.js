@@ -1,9 +1,9 @@
-var api = require("citybikes");
-var loc = require("location");
-var haversine = require("haversine");
-var LIST_LENGTH = 5;
-
-var lastIds, olddict;
+var api = require("./citybikes"),
+	loc = require("./location"),
+	LL = require('./haversine'),
+	keys = require('message_keys'),
+	LIST_LENGTH = 6,
+	lastIds, olddict;
 
 function sameIds(stations) {
 	for(var i=0; i<LIST_LENGTH; i++) {
@@ -15,16 +15,17 @@ function sameIds(stations) {
 function sendList() {
 	var stations = api.nearestStations(loc.lastPosition);
 	if(!stations) return;
-	var dict = {bikes:[],slots:[]};
+	var dict = {}; dict[keys.BIKES] = []; dict[keys.SLOTS] = [];
 	if(lastIds && !api.getAndClearErrorFlag() && sameIds(stations)) {
 		// Just send numbers
 		var hasNewData = false;
 		for(var i=0; i<LIST_LENGTH; i++) {
-			dict["distance_"+i] = Math.round(haversine.dist(stations[i], loc.lastPosition));
-			dict["heading_"+i] = Math.round(haversine.bearing(stations[i], loc.lastPosition));
-			dict.bikes.push(Math.min(stations[i].bikes, 255)); //uint8_t
-			dict.slots.push(Math.min(stations[i].slots, 255));
-			if(!olddict || dict.bikes[i] != olddict.bikes[i] || dict.slots[i] != olddict.slots[i])
+			var s = stations[i];
+			dict[keys.DISTANCES+i] = Math.round(LL(s).distanceTo(loc.lastPosition));
+			dict[keys.HEADINGS+i] = Math.round(loc.lastPosition.bearingTo(LL(s)));
+			dict[keys.BIKES].push(Math.min(s.bikes, 255)); //uint8_t
+			dict[keys.SLOTS].push(Math.min(s.slots, 255));
+			if(!olddict || dict[keys.BIKES][i] != olddict[keys.BIKES][i] || dict[keys.SLOTS][i] != olddict[keys.SLOTS][i])
 				hasNewData = true;
 		}
 		if(!hasNewData) return console.log("No new data");
@@ -33,13 +34,13 @@ function sendList() {
 		lastIds = [];
 		for(var i=0; i<LIST_LENGTH; i++) {
 			var s = stations[i];
-			dict["name_"+i] = s.name.substring(0,32);
+			dict[keys.NAMES+i] = s.name.substring(0,32);
 			if(s.address)
-				dict["address_"+i] = s.address.substring(0,64);
-			dict["distance_"+i] = Math.round(haversine.dist(s, loc.lastPosition));
-			dict["heading_"+i] = Math.round(haversine.bearing(s, loc.lastPosition));
-			dict.bikes.push(Math.min(s.bikes, 255)); //uint8_t
-			dict.slots.push(Math.min(s.slots, 255));
+				dict[keys.ADDRESSES+i] = s.address.substring(0,64);
+			dict[keys.DISTANCES+i] = Math.round(LL(s).distanceTo(loc.lastPosition));
+			dict[keys.HEADINGS+i] = Math.round(loc.lastPosition.bearingTo(LL(s)));
+			dict[keys.BIKES].push(Math.min(s.bikes, 255)); //uint8_t
+			dict[keys.SLOTS].push(Math.min(s.slots, 255));
 			lastIds.push(s.id);
 			olddict = dict;
 		}

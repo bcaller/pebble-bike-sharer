@@ -1,6 +1,5 @@
 #pragma once
-
-#define N_STATIONS 5
+#include "consts.h"
 
 typedef struct {
 	uint8_t n;

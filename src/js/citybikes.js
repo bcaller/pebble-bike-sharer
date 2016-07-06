@@ -1,4 +1,5 @@
-var haversine = require('haversine');
+var LL = require('./haversine');
+var keys = require('message_keys');
 var BASE = "http://api.citybik.es";
 var NETWORKS_URL = "/v2/networks?fields=name,href,location";
 var CHOSEN_KEY = "chosenxx";
@@ -7,7 +8,7 @@ var networks;
 var chosenNetwork = false;
 var stations = null;
 var stationsLastUpdate;
-var STATIONS_UPDATE_INTERVAL = 20 * 1000; // 30 seconds
+var STATIONS_UPDATE_INTERVAL = 30 * 1000; // 30 seconds
 var stations_sorted = false;
 var onStationsUpdated;
 var DIST_MAX = 40 * 1000; // 40km
@@ -15,7 +16,7 @@ var had_prechosen_network = false;
 var stations_dict;
 var updater_interval;
 var has_errored = false;
-var mapAsync = require('async').mapAsync;
+var mapAsync = require('./async').mapAsync;
 
 var httpCache = {};
 var request = function (url, timeout, callback) {
@@ -81,10 +82,10 @@ function setNetwork(coords) {
 	if(!chosenNetwork && !busyWaitingForRequests && networks) {
 		//Find nearest network
 		var bestNetwork = networks[0];
-		var bestDist = haversine.dist(coords, networks[0]);
+		var bestDist = coords.distanceTo(LL(networks[0]));
 		var nearbyNetworks = [];
 		for(var i=1; i< networks.length; i++) {
-			var d = haversine.dist(coords, networks[i]);
+			var d = coords.distanceTo(LL(networks[i]));
 			//console.log(JSON.stringify(networks[i]) + " " + d);
 			if(d < bestDist) {
 				bestNetwork = networks[i];
@@ -107,7 +108,7 @@ function setNetwork(coords) {
 			}
 			return false;
 		} else if(networks.length > 1) {
-			if(haversine.dist(coords, networks[0]) < DIST_MAX) {
+			if(coords.distanceTo(LL(networks[0])) < DIST_MAX) {
 				nearbyNetworks.push(networks[i]);
 			}
 			if(nearbyNetworks.length > 1) {
@@ -140,7 +141,7 @@ function decideMultipleNearby(nbNetworks, coords) {
 					 var nearest = DIST_MAX;
 					 for(var s=0; s< data.network.stations.length; s++) {
 						 if(isActiveStation(data.network.stations[s])) {
-							 var d = haversine.dist(coords, data.network.stations[s]);
+							 var d = coords.distanceTo(LL(data.network.stations[s]));
 							 if(d < nearest) nearest = d;
 						 }
 					 }
@@ -258,12 +259,12 @@ function nearestStations(coords) {
 	if(stations) {
 		if(!(stations_sorted && stations_sorted[0] == coords.latitude && stations_sorted[1] == coords.longitude)) {
 			stations.sort(function(a, b) {
-				return haversine.dist(coords, a) - haversine.dist(coords, b);
+				return coords.distanceTo(LL(a)) - coords.distanceTo(LL(b));
 			});
 			stations_sorted = [coords.latitude, coords.longitude];
 		}
 
-		if(had_prechosen_network && haversine.dist(coords, stations[0]) > 3333) {
+		if(had_prechosen_network && coords.distanceTo(LL(stations[0])) > 3333) {
 			console.error("We appear to have moved to a nearby network");
 			had_prechosen_network = false;
 			localStorage.clear();
@@ -286,7 +287,8 @@ function setOnStationsUpdated(cb) {
 }
 
 function reportNoBikeNetworks() {
-	Pebble.sendAppMessage({err: 4}, function() {
+	var dict = {}; dict[keys.ERR] = 4;
+	Pebble.sendAppMessage(dict, function() {
 		console.log("Send err_no_bike_networks to watch");
 	}, function(err) {
 		console.log("error sending to watch", err);
@@ -295,7 +297,8 @@ function reportNoBikeNetworks() {
 
 function reportNoInternet() {
 	has_errored = true;
-	Pebble.sendAppMessage({err: 3}, function() {
+	var dict = {}; dict[keys.ERR] = 3;
+	Pebble.sendAppMessage(dict, function() {
 		console.log("Send err_no_internet to watch");
 	}, function(err) {
 		console.log("error sending to watch", err);

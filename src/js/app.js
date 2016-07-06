@@ -1,6 +1,6 @@
-var api = require("citybikes");
-var location = require("location");
-var watch = require("watch");
+var api = require("./citybikes");
+var location = require("./location");
+var watch = require("./watch");
 
 function onLocationUpdate(coords) {
 	location.lastPosition = coords;

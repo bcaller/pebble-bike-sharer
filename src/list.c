@@ -2,16 +2,6 @@
 #include "list.h"
 #include "dialog_message_window.h"
 
-#define N_STATIONS 5
-#define KEY_ERR 999
-#define KEY_BIKES 7
-#define KEY_SLOTS 6
-#define KEY_HEADING 2
-#define KEY_DISTANCE 3
-#define KEY_NAME 1
-#define KEY_ADDRESS 4
-#define SEPARATOR_KEY 100
-
 #define PRINT_FORMAT "%s"
 
 Station stations[N_STATIONS];
@@ -25,30 +15,28 @@ void set_update_handler(UpdateHandler uh) {
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Message received!");
-	Tuple *t_bikes_slots = dict_find(iterator, (looking_for_parking ? KEY_SLOTS : KEY_BIKES));
-	Tuple *t_err = dict_find(iterator, KEY_ERR);
+	Tuple *t_bikes_slots = dict_find(iterator, (looking_for_parking ? MESSAGE_KEY_SLOTS : MESSAGE_KEY_BIKES));
+	Tuple *t_err = dict_find(iterator, MESSAGE_KEY_ERR);
 	if(t_bikes_slots) {
 		dialog_message_window_pop();
 		phone_has_spoken = true;
 		
 		bool new_stations = false;
 		uint8_t *n = t_bikes_slots->value->data;
-		uint8_t *other = dict_find(iterator, (looking_for_parking ? KEY_BIKES : KEY_SLOTS))->value->data;
+		uint8_t *other = dict_find(iterator, (looking_for_parking ? MESSAGE_KEY_BIKES : MESSAGE_KEY_SLOTS))->value->data;
 		
 		for(int i=0; i<N_STATIONS; i++) {
-			
-			int key_index = SEPARATOR_KEY * (i+1);
-			Tuple *t_name = dict_find(iterator, KEY_NAME + key_index);
+			Tuple *t_name = dict_find(iterator, MESSAGE_KEY_NAMES + i);
 			if(t_name) {
 				snprintf(stations[i].name, sizeof(stations[i].name), PRINT_FORMAT, t_name->value->cstring);
-				Tuple *t_address = dict_find(iterator, KEY_ADDRESS + key_index);
+				Tuple *t_address = dict_find(iterator, MESSAGE_KEY_ADDRESSES + i);
 				snprintf(stations[i].address, sizeof(stations[i].address), PRINT_FORMAT, t_address ? t_address->value->cstring : "");
 				new_stations = true;
 			}
 			stations[i].n = n[i];
 			stations[i].other = other[i];
-			stations[i].heading = dict_find(iterator, KEY_HEADING + key_index)->value->int32;
-			stations[i].distance = dict_find(iterator, KEY_DISTANCE + key_index)->value->int32;
+			stations[i].heading = DEG_TO_TRIGANGLE(dict_find(iterator, MESSAGE_KEY_HEADINGS + i)->value->int32);
+			stations[i].distance = dict_find(iterator, MESSAGE_KEY_DISTANCES + i)->value->int32;
 			
 			if(i==0)
 				APP_LOG(APP_LOG_LEVEL_DEBUG, "%s with %d! (%d)", stations[i].name, stations[i].n, stations[i].other);

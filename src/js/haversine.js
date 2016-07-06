@@ -1,38 +1,12 @@
-//From movable type
+var LatLon = require('geodesy-spherical');
 
-function d2r(d) { return d * Math.PI / 180; }
-function r2d(r) { return r * 180 / Math.PI; }
+var ll = module.exports = function(z) { return new LatLon(z.latitude||z.lat, z.longitude||z.lon); }
 
 function bearing(dest, orig) {
-    var φ1 = d2r(orig.latitude), φ2 = d2r(dest.latitude);
-    var Δλ = d2r(dest.longitude-orig.longitude);
-
-    // see http://mathforum.org/library/drmath/view/55417.html
-    var y = Math.sin(Δλ) * Math.cos(φ2);
-    var x = Math.cos(φ1)*Math.sin(φ2) -
-            Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
-    var θ = Math.atan2(y, x);
-
-    return (r2d(θ)+360) % 360;
+	return ll(orig).bearingTo(ll(dest));
 }
 
-function distance(z, q) {
-    var radius = 6371e3;
-
-    var R = radius;
-    var φ1 = d2r(z.latitude),  λ1 = d2r(z.longitude);
-    var φ2 = d2r(q.latitude), λ2 = d2r(q.longitude);
-    var Δφ = φ2 - φ1;
-    var Δλ = λ2 - λ1;
-
-    var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    var d = R * c;
-
-	return d;
-}
-
-module.exports.dist = distance;
+module.exports.dist = function distance(z, q) {
+    return ll(z).distanceTo(ll(q));
+};
 module.exports.bearing = bearing;

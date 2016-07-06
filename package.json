@@ -1,6 +1,8 @@
 {
     "author": "bcaller@gmail.com",
-    "dependencies": {},
+    "dependencies": {
+        "geodesy-spherical": "1.1.0"
+    },
     "keywords": [],
     "name": "bike-sharer",
     "pebble": {
@@ -9,31 +11,15 @@
         ],
         "displayName": "bike-sharer",
         "enableMultiJS": true,
-        "messageKeys": {
-            "address_0": 104,
-            "address_1": 204,
-            "address_2": 304,
-            "address_3": 404,
-            "address_4": 504,
-            "bikes": 7,
-            "distance_0": 103,
-            "distance_1": 203,
-            "distance_2": 303,
-            "distance_3": 403,
-            "distance_4": 503,
-            "err": 999,
-            "heading_0": 102,
-            "heading_1": 202,
-            "heading_2": 302,
-            "heading_3": 402,
-            "heading_4": 502,
-            "name_0": 101,
-            "name_1": 201,
-            "name_2": 301,
-            "name_3": 401,
-            "name_4": 501,
-            "slots": 6
-        },
+        "messageKeys": [
+            "SLOTS",
+            "BIKES",
+            "NAMES[6]",
+            "HEADINGS[6]",
+            "DISTANCES[6]",
+            "ADDRESSES[6]",
+            "ERR"
+        ],
         "projectType": "native",
         "resources": {
             "media": [
@@ -85,5 +71,5 @@
             "watchface": false
         }
     },
-    "version": "1.9.0"
+    "version": "2.0.0"
 }
