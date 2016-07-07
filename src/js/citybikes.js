@@ -177,10 +177,14 @@ function isActiveStation(station) {
 	if(station.empty_slots <= 0 && station.free_bikes <= 0) return false;
 	if(!station.extra) return true;
 	if("installed" in station.extra && !station.extra.installed) return false;
-	if("status" in station.extra && station.extra.status == 'CLOSED') return false;
+	if("status" in station.extra) {
+		var status = station.extra.status.toUpperCase();
+		if(status == 'CLOSED' || status == 'OFFLINE') return false;
+	}
 	if("locked" in station.extra && station.extra.locked) return false;
 	if("testStation" in station.extra && station.extra.testStation) return false;
 	if("statusValue" in station.extra && station.extra.statusValue == 'Not In Service') return false;
+	if("online" in station.extra && station.extra.online === false) return false;
 
 	return true;
 }
