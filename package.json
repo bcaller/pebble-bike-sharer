@@ -5,6 +5,7 @@
     },
     "keywords": [],
     "name": "bike-sharer",
+    "license": "GPL-3.0",
     "pebble": {
         "capabilities": [
             "location"
