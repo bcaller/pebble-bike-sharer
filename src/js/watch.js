@@ -34,9 +34,9 @@ function sendList() {
 		lastIds = [];
 		for(var i=0; i<LIST_LENGTH; i++) {
 			var s = stations[i];
-			dict[keys.NAMES+i] = s.name.substring(0,32);
+			dict[keys.NAMES+i] = s.name.substring(0,31);
 			if(s.address)
-				dict[keys.ADDRESSES+i] = s.address.substring(0,64);
+				dict[keys.ADDRESSES+i] = s.address.substring(0,63);
 			dict[keys.DISTANCES+i] = Math.round(LL(s).distanceTo(loc.lastPosition));
 			dict[keys.HEADINGS+i] = Math.round(loc.lastPosition.bearingTo(LL(s)));
 			dict[keys.BIKES].push(Math.min(s.bikes, 255)); //uint8_t

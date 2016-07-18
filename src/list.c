@@ -1,6 +1,7 @@
 #include <pebble.h>
 #include "list.h"
 #include "dialog_message_window.h"
+#include <pebble_unicode/buffer_size.h>
 
 #define PRINT_FORMAT "%s"
 
@@ -28,9 +29,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 		for(int i=0; i<N_STATIONS; i++) {
 			Tuple *t_name = dict_find(iterator, MESSAGE_KEY_NAMES + i);
 			if(t_name) {
-				snprintf(stations[i].name, sizeof(stations[i].name), PRINT_FORMAT, t_name->value->cstring);
+				size_t buf_size = unicode_buffer_size(t_name->value->cstring, sizeof(stations[i].name));
+				snprintf(stations[i].name, buf_size, PRINT_FORMAT, t_name->value->cstring);
 				Tuple *t_address = dict_find(iterator, MESSAGE_KEY_ADDRESSES + i);
-				snprintf(stations[i].address, sizeof(stations[i].address), PRINT_FORMAT, t_address ? t_address->value->cstring : "");
+				buf_size = unicode_buffer_size(t_address->value->cstring, sizeof(stations[i].address));
+				snprintf(stations[i].address, buf_size, PRINT_FORMAT, t_address ? t_address->value->cstring : "");
 				new_stations = true;
 			}
 			stations[i].n = n[i];

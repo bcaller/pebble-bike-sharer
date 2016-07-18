@@ -15,7 +15,7 @@ function beginWatch(onUpdate, onErr) {
 			//coords = {latitude: 40.7527, longitude: -73.9772};
 			//coords = {latitude: 40.7425993836325, longitude: -74.0322035551};
 			/**/
-			//coords = {latitude: 48.8584, longitude: 2.2945};
+			//coords = LL({latitude: 55.678373, longitude: 37.5745946});
 			if(!module.exports.lastPosition || coords.distanceTo(module.exports.lastPosition) > 7) {
 				module.exports.lastPosition = coords;
 				onUpdate(coords);

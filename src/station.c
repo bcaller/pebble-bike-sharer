@@ -3,11 +3,12 @@
 #include "list.h"
 #include "compass.h"
 #include "consts.h"
+#include <pebble_unicode/buffer_size.h>
 
 static int station_pointer;
 static char distance_str[8];
 static char heading_str[3];
-static char name_initial[8];
+static char name_initial[16];
 static char n_str[4];
 
 static Window *main_window;
@@ -69,7 +70,7 @@ static void refresh(bool new_stations) {
 		station_pointer = 0;
 		// If we update, try to find the same station
 		for(int i=0; i < N_STATIONS; i++) {
-			if(strncmp(name_initial, stations[i].name, 7) == 0) {
+			if(strncmp(name_initial, stations[i].name, sizeof(name_initial) - 1) == 0) {
 				station_pointer = i;
 				animate = true;
 				break;
@@ -93,7 +94,7 @@ static void refresh(bool new_stations) {
 							 station->distance > 100 ? GColorBlack : GColorWhite, GColorRed);
 	
 	text_layer_set_text(name, station->name);
-	snprintf(name_initial, 8, "%s", station->name);
+	snprintf(name_initial, unicode_buffer_size(station->name, sizeof(name_initial)), "%s", station->name);
 	
 	text_layer_set_text(address, station->address);
 	
