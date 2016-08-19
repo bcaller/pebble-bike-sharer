@@ -6,7 +6,7 @@ typedef struct {
 	uint8_t other;
 	int heading;
 	int distance;
-	char name[32];
+	char name[64];
 	char address[64];
 } Station;
 

@@ -2,7 +2,8 @@
     "author": "bcaller@gmail.com",
     "dependencies": {
         "geodesy-spherical": "1.1.0",
-        "pebble_unicode": "1.0.1"
+        "pebble_unicode": "1.0.1",
+        "side-scrolling-text-layer": "1.1.5"
     },
     "keywords": [],
     "name": "bike-sharer",
@@ -72,5 +73,5 @@
             "watchface": false
         }
     },
-    "version": "2.2.0"
+    "version": "2.3.0"
 }

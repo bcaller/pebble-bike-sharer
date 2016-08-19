@@ -4,6 +4,7 @@
 #include "compass.h"
 #include "consts.h"
 #include <pebble_unicode/buffer_size.h>
+#include <side-scrolling-text-layer/side-scrolling-text-layer.h>
 
 static int station_pointer;
 static char distance_str[8];
@@ -30,7 +31,7 @@ typedef struct NumbersAnimationData {
 static StatusBarLayer *status;
 static TextLayer *distance;
 static TextLayer *heading;
-static TextLayer *name;
+static SideScrollingTextLayer *name;
 static Layer *hr;
 static TextLayer *number;
 static TextLayer *bikes_spaces;
@@ -93,7 +94,9 @@ static void refresh(bool new_stations) {
 	compass_layer_set_colors(compass, station->distance > 300 ? GColorImperialPurple : GColorBlue,
 							 station->distance > 100 ? GColorBlack : GColorWhite, GColorRed);
 	
-	text_layer_set_text(name, station->name);
+	side_scrolling_text_layer_set_text(name, station->name);
+	side_scrolling_text_layer_set_forward_duration(name, 20*side_scrolling_text_layer_get_max_offset(name));
+	side_scrolling_text_layer_animate(name);
 	snprintf(name_initial, unicode_buffer_size(station->name, sizeof(name_initial)), "%s", station->name);
 	
 	text_layer_set_text(address, station->address);
@@ -209,13 +212,11 @@ static void station_window_load(Window *window) {
 	
 	GRect bounds_content = GRect(3, (STATUS_BAR_LAYER_HEIGHT), bounds.size.w - 3 - 3, bounds.size.h - (STATUS_BAR_LAYER_HEIGHT));
 	
-	GRect bounds_name = GRect(bounds_content.origin.x, bounds_content.origin.y, bounds_content.size.w+20, 25);
-	name = text_layer_create(bounds_name);
-	text_layer_set_font(name, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-	text_layer_set_text_alignment(name, GTextAlignmentLeft);
-	text_layer_set_overflow_mode(name, GTextOverflowModeFill);
-	text_layer_set_background_color(name, GColorClear);
-	text_layer_set_text_color(name, GColorWhite);
+	GRect bounds_name = GRect(bounds_content.origin.x, bounds_content.origin.y, bounds_content.size.w, 27);
+	name = side_scrolling_text_layer_create(bounds_name);
+	side_scrolling_text_layer_set_font(name, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+	side_scrolling_text_layer_set_text_color(name, GColorWhite);
+	side_scrolling_text_layer_set_curve(name, AnimationCurveLinear, NULL);
 	
 	GRect bounds_hr = GRect(bounds_content.origin.x, 26 + bounds_content.origin.y, bounds_content.size.w, 2);
 	hr = layer_create(bounds_hr);
@@ -252,7 +253,7 @@ static void station_window_load(Window *window) {
 	layer_add_child(window_layer, status_bar_layer_get_layer(status));
 	layer_add_child(status_bar_layer_get_layer(status), text_layer_get_layer(distance));
 	layer_add_child(status_bar_layer_get_layer(status), text_layer_get_layer(heading));
-	layer_add_child(window_layer, text_layer_get_layer(name));
+	layer_add_child(window_layer, side_scrolling_text_layer_get_layer(name));
 	layer_add_child(window_layer, hr);
 	layer_add_child(window_layer, compass_layer_get_layer(compass));
 	layer_add_child(window_layer, text_layer_get_layer(number));
@@ -280,14 +281,11 @@ static void station_window_load(Window *window) {
 	text_layer_set_text_color(bikes_spaces, GColorWhite);
 	text_layer_set_text(bikes_spaces, "bikes");
 	
-	GRect bounds_name = GRect(5, (bounds.size.h/2 - 33), bounds.size.w - 5 - -20, 25);
-	name = text_layer_create(bounds_name);
-	text_layer_set_font(name, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-	text_layer_set_text_alignment(name, GTextAlignmentLeft);
-	text_layer_set_overflow_mode(name, GTextOverflowModeFill);
-	text_layer_set_background_color(name, GColorClear);
-	text_layer_set_text_color(name, GColorWhite);
-	text_layer_set_text(name, "Menilmontant");
+	GRect bounds_name = GRect(5, (bounds.size.h/2 - 33), bounds.size.w - 7, 27);
+	name = side_scrolling_text_layer_create(bounds_name);
+	side_scrolling_text_layer_set_font(name, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+	side_scrolling_text_layer_set_text_color(name, GColorWhite);
+	side_scrolling_text_layer_set_curve(name, AnimationCurveLinear, NULL);
 	
 	GRect bounds_hr = GRect(0, (bounds.size.h/2 - 7), bounds.size.w, 2);
 	hr = layer_create(bounds_hr);
@@ -325,7 +323,7 @@ static void station_window_load(Window *window) {
 	// Add Layers
 
 	layer_add_child(window_layer, status_bar_layer_get_layer(status));
-	layer_add_child(window_layer, text_layer_get_layer(name));
+	layer_add_child(window_layer, side_scrolling_text_layer_get_layer(name));
 	layer_add_child(window_layer, hr);
 	layer_add_child(window_layer, compass_layer_get_layer(compass));
 	layer_add_child(window_layer, text_layer_get_layer(distance));
@@ -416,7 +414,7 @@ static void station_window_unload(Window *window) {
 	status_bar_layer_destroy(status);
 	text_layer_destroy(distance);
 	text_layer_destroy(heading);
-	text_layer_destroy(name);
+	side_scrolling_text_layer_destroy(name);
 	layer_destroy(hr);
 	text_layer_destroy(number);
 	text_layer_destroy(bikes_spaces);
