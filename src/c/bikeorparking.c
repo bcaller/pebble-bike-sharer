@@ -87,7 +87,7 @@ static void bikeorparking_window_load(Window *window) {
 	GRect bounds_bike_img = GRect(0, 0, bounds.size.w, bounds.size.h/2 - 5);
 	bike_img = bitmap_layer_create(bounds_bike_img);
 	bitmap_layer_set_alignment(bike_img, GAlignBottom);
-	bitmap_layer_set_background_color(bike_img, GColorJazzberryJam);
+	bitmap_layer_set_background_color(bike_img, PBL_IF_COLOR_ELSE(GColorJazzberryJam, GColorWhite));
 	bitmap_bike = gbitmap_create_with_resource(RESOURCE_ID_BIKE);
 	bitmap_layer_set_bitmap(bike_img, bitmap_bike);
 	bitmap_layer_set_compositing_mode(bike_img, GCompOpSet);

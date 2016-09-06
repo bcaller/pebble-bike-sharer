@@ -2,8 +2,8 @@
     "author": "bcaller@gmail.com",
     "dependencies": {
         "geodesy-spherical": "1.1.0",
-        "pebble_unicode": "1.0.1",
-        "side-scrolling-text-layer": "1.1.5"
+        "pebble_unicode": "3.0.0",
+        "side-scrolling-text-layer": "2.0.0"
     },
     "keywords": [],
     "name": "bike-sharer",
@@ -25,6 +25,13 @@
         "projectType": "native",
         "resources": {
             "media": [
+                {
+                    "file": "images/iconmenu.png",
+                    "menuIcon": true,
+                    "name": "MENU_ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
                 {
                     "file": "images/warning.png",
                     "name": "WARNING",
@@ -65,13 +72,15 @@
         },
         "sdkVersion": "3",
         "targetPlatforms": [
+            "aplite",
             "basalt",
-            "chalk"
+            "chalk",
+            "diorite"
         ],
         "uuid": "11501158-e49e-486b-aab8-d6397688fa9f",
         "watchapp": {
             "watchface": false
         }
     },
-    "version": "2.3.0"
+    "version": "2.4.0"
 }

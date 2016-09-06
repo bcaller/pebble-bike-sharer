@@ -42,6 +42,7 @@ static void compass_heading_handler(CompassHeadingData heading_data) {
 	heading = heading_data;
 	switch(heading_data.compass_status) {
 		case CompassStatusDataInvalid:
+		case CompassStatusUnavailable:
 			APP_LOG(APP_LOG_LEVEL_INFO, "Not yet calibrated.");
 			break;
 		case CompassStatusCalibrating:

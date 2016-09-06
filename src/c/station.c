@@ -91,8 +91,12 @@ static void refresh(bool new_stations) {
 		snprintf(distance_str, 8, "%d m", station->distance);
 	}
 	text_layer_set_text(distance, distance_str);
+#ifdef PBL_COLOR
 	compass_layer_set_colors(compass, station->distance > 300 ? GColorImperialPurple : GColorBlue,
 							 station->distance > 100 ? GColorBlack : GColorWhite, GColorRed);
+#else
+	compass_layer_set_colors(compass, GColorBlack, GColorBlack, GColorWhite);
+#endif
 	
 	side_scrolling_text_layer_set_text(name, station->name);
 	side_scrolling_text_layer_set_forward_duration(name, 20*side_scrolling_text_layer_get_max_offset(name));
@@ -114,6 +118,7 @@ static void refresh(bool new_stations) {
 	else COMPASS_DIR(128," N"); // North is +/- 22.5 degrees (360/16)
 	text_layer_set_text(heading, heading_str);
 		
+#ifdef PBL_COLOR
 	GColor new_bg_color;
 	if(station->n <= 1) {
 		new_bg_color = GColorRed;
@@ -122,6 +127,9 @@ static void refresh(bool new_stations) {
 	} else {
 		new_bg_color = GColorJaegerGreen;
 	}
+#else
+	GColor new_bg_color = GColorBlack;
+#endif
 	window_set_background_color(main_window, new_bg_color);
 	status_bar_layer_set_colors(status, new_bg_color, GColorWhite);
 	
@@ -270,7 +278,7 @@ static void station_window_load(Window *window) {
 	text_layer_set_font(number, fonts_get_system_font(FONT_KEY_LECO_38_BOLD_NUMBERS));
 	text_layer_set_text_alignment(number, GTextAlignmentCenter);
 	text_layer_set_background_color(number, GColorClear);
-	text_layer_set_text_color(number, GColorWhite);
+	text_layer_set_text_color(number, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
 	text_layer_set_text(number, "12");
 	
 	GRect bounds_bikes_spaces = GRect((bounds.size.w/2 + 30), 40, bounds.size.w - (bounds.size.w/2 + 30) - 5, 16);
@@ -278,7 +286,7 @@ static void station_window_load(Window *window) {
 	text_layer_set_font(bikes_spaces, fonts_get_system_font(FONT_KEY_GOTHIC_14));
 	text_layer_set_text_alignment(bikes_spaces, GTextAlignmentLeft);
 	text_layer_set_background_color(bikes_spaces, GColorClear);
-	text_layer_set_text_color(bikes_spaces, GColorWhite);
+	text_layer_set_text_color(bikes_spaces, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
 	text_layer_set_text(bikes_spaces, "bikes");
 	
 	GRect bounds_name = GRect(5, (bounds.size.h/2 - 33), bounds.size.w - 7, 27);
@@ -297,7 +305,7 @@ static void station_window_load(Window *window) {
 	text_layer_set_text_alignment(address, GTextAlignmentLeft);
 	text_layer_set_overflow_mode(address, GTextOverflowModeFill);
 	text_layer_set_background_color(address, GColorClear);
-	text_layer_set_text_color(address, GColorWhite);
+	text_layer_set_text_color(address, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
 	text_layer_set_text(address, "25 Bd de Menilmontant");
 	
 	GRect bounds_compass = GRect(0, bounds.size.h/2 - 7, bounds.size.w, bounds.size.h/2 - -7);
