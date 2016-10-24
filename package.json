@@ -26,19 +26,6 @@
         "resources": {
             "media": [
                 {
-                    "file": "images/ic_location_off_black_48dp.png",
-                    "name": "NO_LOCATION",
-                    "targetPlatforms": null,
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/iconmenu.png",
-                    "menuIcon": true,
-                    "name": "MENU_ICON",
-                    "targetPlatforms": null,
-                    "type": "bitmap"
-                },
-                {
                     "file": "images/warning.png",
                     "name": "WARNING",
                     "targetPlatforms": null,
@@ -53,6 +40,19 @@
                 {
                     "file": "images/nobikes.png",
                     "name": "NO_BIKES",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/iconmenu.png",
+                    "menuIcon": true,
+                    "name": "MENU_ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/ic_location_off_black_48dp.png",
+                    "name": "NO_LOCATION",
                     "targetPlatforms": null,
                     "type": "bitmap"
                 },
@@ -73,12 +73,6 @@
                     "name": "DISCO",
                     "targetPlatforms": null,
                     "type": "bitmap"
-                }
-            ], "publishedMedia": [
-                {
-                    "name": "APP_ICON",
-                    "id": 1,
-                    "glance": "MENU_ICON"
                 }
             ]
         },

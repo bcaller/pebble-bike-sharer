@@ -331,6 +331,5 @@ module.exports.getAndClearErrorFlag = function() {
 	return old_err;
 };
 module.exports.getNetworkName = function() {
-	console.log("get lrnn " + lastRequestedNetworkName)
 	return lastRequestedNetworkName;
 };
