@@ -1,22 +1,25 @@
-var LL = require('./haversine');
-var keys = require('message_keys');
-var BASE = "http://api.citybik.es";
-var NETWORKS_URL = "/v2/networks?fields=name,href,location";
-var CHOSEN_KEY = "chosenxx";
-var STATION_DATA_KEY = "stdata";
-var networks;
-var chosenNetwork = false;
-var stations = null;
-var stationsLastUpdate;
-var STATIONS_UPDATE_INTERVAL = 30 * 1000; // 30 seconds
-var stations_sorted = false;
-var onStationsUpdated;
-var DIST_MAX = 40 * 1000; // 40km
-var had_prechosen_network = false;
-var stations_dict;
-var updater_interval;
-var has_errored = false;
-var mapAsync = require('./async').mapAsync;
+var LL = require('./haversine'),
+	keys = require('message_keys'),
+	glance = require("./glance"),
+	location = require("./location"),
+	BASE = "http://api.citybik.es",
+	NETWORKS_URL = "/v2/networks?fields=name,href,location",
+	CHOSEN_KEY = "chosenxx",
+	STATION_DATA_KEY = "stdata",
+	networks,
+	chosenNetwork = false,
+	lastRequestedNetworkName = null,
+	stations = null,
+	stationsLastUpdate,
+	STATIONS_UPDATE_INTERVAL = 30 * 1000, //30 seconds
+	stations_sorted = false,
+	onStationsUpdated,
+	DIST_MAX = 40 * 1000, // 40km
+	had_prechosen_network = false,
+	stations_dict,
+	updater_interval,
+	has_errored = false,
+	mapAsync = require('./async').mapAsync;
 
 var httpCache = {};
 var request = function (url, timeout, callback) {
@@ -104,6 +107,7 @@ function setNetwork(coords) {
 				console.log("Downloading full list of networks");
 				updateNetworks(function(){setNetwork(coords);});
 			} else {
+				location.stopPositionUpdates();  // Die
 				reportNoBikeNetworks();
 			}
 			return false;
@@ -218,6 +222,7 @@ function updateStations(network) {
 
 	request(BASE + (network || chosenNetwork).url, STATIONS_UPDATE_INTERVAL - 3000, function(data) {
 		stations_sorted = false;
+		lastRequestedNetworkName = data.network.name;
 		var s = data.network.stations;
 		stations = [];
 		stations_dict = {};
@@ -235,7 +240,8 @@ function updateStations(network) {
 
 		localStorage.setItem(STATION_DATA_KEY, JSON.stringify({
 			lut: (Date.now() + 0),
-			stations: stations
+			stations: stations,
+			name: lastRequestedNetworkName
 		}));
 	});
 
@@ -246,6 +252,8 @@ function updateStations(network) {
 			try {
 				var cached = JSON.parse(cachedStr);
 				if(cached.lut && cached.stations && cached.lut > (Date.now() - 5 * 60 * 1000)) {
+					lastRequestedNetworkName = cached.name;
+					console.log("cached lrnn " + lastRequestedNetworkName);
 					stations = cached.stations;
 					stations_dict = {};
 					for(var i=0; i< stations.length; i++) {
@@ -297,6 +305,7 @@ function reportNoBikeNetworks() {
 	}, function(err) {
 		console.log("error sending to watch", err);
 	});
+	glance();
 }
 
 function reportNoInternet() {
@@ -307,6 +316,7 @@ function reportNoInternet() {
 	}, function(err) {
 		console.log("error sending to watch", err);
 	});
+	glance();
 }
 
 module.exports.init = updateNetworks;
@@ -319,4 +329,8 @@ module.exports.getAndClearErrorFlag = function() {
 	var old_err = has_errored;
 	has_errored = false;
 	return old_err;
+};
+module.exports.getNetworkName = function() {
+	console.log("get lrnn " + lastRequestedNetworkName)
+	return lastRequestedNetworkName;
 };

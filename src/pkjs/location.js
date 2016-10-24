@@ -1,8 +1,23 @@
-var LL = require('./haversine');
-var noop = function(){};
-var watch = null;
+var LL = require('./haversine'),
+	keys = require('message_keys'),
+	glance = require("./glance"),
+	watch = null;
 
-function beginWatch(onUpdate, onErr) {
+module.exports.lastPosition = null;
+
+function reportLocationError() {
+	if(module.exports.lastPosition)
+		return;
+	var dict = {}; dict[keys.ERR] = 7;
+	Pebble.sendAppMessage(dict, function() {
+		console.log("Send err_no_location to watch");
+	}, function(err) {
+		console.log("error sending to watch");
+	});
+	glance();
+}
+
+function beginWatch(onUpdate) {
 	if(watch) return;
 	watch = "ok";
 	
@@ -14,7 +29,7 @@ function beginWatch(onUpdate, onErr) {
 			//pos.coords = {latitude: 48.8584, longitude: 2.2945};
 			//coords = LL({latitude: 40.7527, longitude: -73.9772});
 			//coords = {latitude: 40.7425993836325, longitude: -74.0322035551};
-			//coords = LL({latitude: 42.350406, longitude: -71.108279});
+			//coords = LL({latitude: 42.350406, longitude: -71.108279}); //Hubway
 			/**/
 			//coords = LL({latitude: 55.678373, longitude: 37.5745946});
 			if(!module.exports.lastPosition || coords.distanceTo(module.exports.lastPosition) > 7) {
@@ -27,8 +42,14 @@ function beginWatch(onUpdate, onErr) {
 	};
 	var actuallyWatch = function() {
 		watch = navigator.geolocation.watchPosition(
-			update, onErr || noop,
-			{timeout: 15000, maximumAge: 45000, enableHighAccuracy: true}
+			update, function posErr() {
+				// PebbleKit JS API does not exactly follow w3 spec for error handling
+				stopPositionUpdates();
+				reportLocationError();
+				// Restart position updates
+				actuallyWatch();
+			},
+			{timeout: 15e3, maximumAge: 45e3, enableHighAccuracy: true}
 		);
 	};
 	
@@ -37,13 +58,20 @@ function beginWatch(onUpdate, onErr) {
 		function(pos) {
 			update(pos);
 			actuallyWatch();
-		}, function(err) {
-			if(onErr) onErr(err);
+		}, function() {
+			reportLocationError();
 			actuallyWatch();
 		},
-		{timeout: 45 * 1000, maximumAge: 15 * 60 * 1000}
+		{timeout: 30e3, maximumAge: 15 * 60 * 1000}
 	);
 }
 
+function stopPositionUpdates() {
+	if(watch && watch != "ok") {
+		navigator.geolocation.clearWatch(watch);
+		watch = null;
+	}
+}
+
 module.exports.init = beginWatch;
-module.exports.lastPosition = null;
+module.exports.stopPositionUpdates = stopPositionUpdates;

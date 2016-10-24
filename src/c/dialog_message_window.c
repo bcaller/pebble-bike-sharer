@@ -23,6 +23,10 @@ static void show_msgid() {
 			text_layer_set_text(disco_text, "No internet");
 			bitmap_disco = gbitmap_create_with_resource(RESOURCE_ID_NO_INTERNET);
 			break;
+		case 7:
+			text_layer_set_text(disco_text, "No location");
+			bitmap_disco = gbitmap_create_with_resource(RESOURCE_ID_NO_LOCATION);
+			break;
 		default:
 			text_layer_set_text(disco_text, "An error occurred");
 	}
@@ -66,6 +70,7 @@ static void window_unload(Window *window) {
 }
 
 void dialog_message_window_push(uint8_t msg_id) {
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "error is %d -> %d", msgid, msg_id);
 	if(msg_id % 2 == 0) {
 		window_stack_pop_all(false);
 	}

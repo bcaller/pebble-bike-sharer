@@ -2,6 +2,7 @@ var api = require("./citybikes"),
 	loc = require("./location"),
 	LL = require('./haversine'),
 	keys = require('message_keys'),
+	glance = require("./glance"),
 	LIST_LENGTH = 6,
 	lastIds, olddict;
 
@@ -51,6 +52,12 @@ function sendList() {
 	}, function(err) {
 		console.log("error sending to watch", err);
 	});
+	
+	if(stations.length > 2) {
+		glance(api.getNetworkName(),
+			   stations[0].bikes + stations[1].bikes + stations[2].bikes,
+			   stations[0].slots + stations[1].slots + stations[2].slots, Math.round(dict[keys.DISTANCES+2]/10)*10);
+	}
 }
 
 Pebble.addEventListener('appmessage', function(e) {

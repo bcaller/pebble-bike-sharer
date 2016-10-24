@@ -26,6 +26,12 @@
         "resources": {
             "media": [
                 {
+                    "file": "images/ic_location_off_black_48dp.png",
+                    "name": "NO_LOCATION",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/iconmenu.png",
                     "menuIcon": true,
                     "name": "MENU_ICON",
@@ -82,5 +88,5 @@
             "watchface": false
         }
     },
-    "version": "2.4.0"
+    "version": "2.6.0"
 }

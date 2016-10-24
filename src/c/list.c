@@ -49,6 +49,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 			update_handler(new_stations);
 		}
 	} else if(t_err) {
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Error message received!");
 		if(!phone_has_spoken) {
 			dialog_message_window_push(t_err->value->uint8);
 		}
