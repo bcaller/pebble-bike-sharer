@@ -74,6 +74,12 @@
                     "targetPlatforms": null,
                     "type": "bitmap"
                 }
+            ], "publishedMedia": [
+                {
+                    "name": "APP_ICON",
+                    "id": 1,
+                    "glance": "MENU_ICON"
+                }
             ]
         },
         "sdkVersion": "3",

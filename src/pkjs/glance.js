@@ -10,6 +10,7 @@ module.exports = function(networkName, n_bikes, n_spaces, dist) {
 		console.log("glancing " + networkName +" "+ n_bikes+" "+n_spaces+" "+dist);
 		var appGlanceSlices = [{
 				"layout": {
+					"icon": "app://images/APP_ICON",
 					"subtitleTemplateString": n_bikes + " bikes, " + n_spaces + " spaces within " + dist + "m"
 				},
 				"expirationTime": new Date((new Date() * 1) + 4 * 60 * 1000).toISOString() // 4 minutes
