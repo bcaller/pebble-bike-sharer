@@ -53,7 +53,7 @@ function beginWatch(onUpdate) {
 		);
 	};
 	
-	// First get location with a longer timeout and maybe less accurate to choose network
+	// First get location with a slightly longer timeout and maybe less accurate to choose network
 	navigator.geolocation.getCurrentPosition(
 		function(pos) {
 			update(pos);
@@ -62,7 +62,7 @@ function beginWatch(onUpdate) {
 			reportLocationError();
 			actuallyWatch();
 		},
-		{timeout: 30e3, maximumAge: 15 * 60 * 1000}
+		{timeout: 22e3, maximumAge: 15 * 60 * 1000}
 	);
 }
 
