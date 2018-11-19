@@ -178,10 +178,10 @@ function decideMultipleNearby(nbNetworks, coords) {
 
 function isActiveStation(station) {
 	if(!station.empty_slots && !station.free_bikes) return false;
-	if(station.empty_slots <= 0 && station.free_bikes <= 0) return false;
+	if(station.empty_slots !== null && station.empty_slots <= 0 && station.free_bikes <= 0) return false;
 	if(!station.extra) return true;
 	if("installed" in station.extra && !station.extra.installed) return false;
-	if("status" in station.extra) {
+	if("status" in station.extra && typeof station.extra.status == "string") {
 		var status = station.extra.status.toUpperCase();
 		if(status == 'CLOSED' || status == 'OFFLINE') return false;
 	}
